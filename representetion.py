@@ -1,6 +1,8 @@
 import numpy as np
 from random import shuffle
 import itertools
+import logging
+from tqdm import tqdm
 
 
 class Glove:
@@ -13,7 +15,9 @@ class Glove:
         self.learning_rate = learning_rate
 
     def fit(self, tokens):
+        logging.debug('fitting started')
         vocabulary, co_occurrence = self.build_co_occurrence(tokens)
+        logging.debug('co-occurrence matrix is obtained')
 
         W = (np.random.rand(len(vocabulary) * 2, self.vector_size) - 0.5) / float(self.vector_size+1)
         biases = (np.random.rand(len(vocabulary) * 2) - 0.5) / float(self.vector_size + 1)
@@ -31,13 +35,14 @@ class Glove:
             co_occurrence[i_main, i_context]
         ) for i_main, i_context in itertools.permutations(range(len(co_occurrence)), 2) if co_occurrence[i_main, i_context] > 0]
 
-        for i in np.arange(self.iterations):
-            cost = self.iter(data)
-            print('Iteration {}.   cost={}'.format(i, cost))
+        for i in tqdm(np.arange(self.iterations),
+                      total=self.iterations, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} {elapsed}'):
+            cost = self.train_vectors(data)
+            logging.info(f' iteration {i}    cost={cost:.4f}')
 
         return vocabulary, W
 
-    def iter(self, data):
+    def train_vectors(self, data):
         global_cost = 0
 
         shuffle(data)

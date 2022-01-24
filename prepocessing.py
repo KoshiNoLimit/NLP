@@ -1,3 +1,4 @@
+import logging
 import re
 
 
@@ -7,6 +8,7 @@ STOPWORDS = {'', ' ', 'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves
 def preprocess(file):
     text = clean_text(file.read())
     tokens = tokenize(text)
+    logging.info(f'{file.name} tokenized    tokens: {len(tokens)}, unique: {len(set(tokens))}')
 
     return tokens
 
