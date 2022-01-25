@@ -7,12 +7,24 @@ from tqdm import tqdm
 
 class Glove:
 
-    def __init__(self, window=5, vector_size=100, iterations=25, x_max=20, alpha=0.75, learning_rate=0.05):
-        self.window = window
-        self.vector_size = vector_size
-        self.iterations = iterations
+    VECTOR_SIZE = 100
+    ITERATIONS = 100
+    WINDOW = 5
+    LEARNING_RATE = 0.05
+    X_MAX = 20
+    ALPHA = 0.75
+
+    def __init__(self, vector_size=None, iterations=None, window=None, learning_rate=None, x_max=None, alpha=None):
+        self.vector_size = vector_size if vector_size is not None else Glove.VECTOR_SIZE
+        self.iterations = iterations if iterations is not None else Glove.ITERATIONS
+        self.window = window if window is not None else Glove.WINDOW
+        self.learning_rate = learning_rate if learning_rate is not None else Glove.LEARNING_RATE
+
+        x_max = x_max if x_max is not None else Glove.X_MAX
+        alpha = alpha if alpha is not None else Glove.ALPHA
         self.weight = lambda x: 1 if x > x_max else (x / x_max) ** alpha
-        self.learning_rate = learning_rate
+
+        logging.debug(f'Glove: {self.__dict__}')
 
     def fit(self, tokens):
         logging.debug('fitting started')
@@ -25,15 +37,15 @@ class Glove:
         gradient_squared_biases = np.ones(len(vocabulary) * 2, dtype=np.float64)
 
         data = [(
-            W[i_main],
-            W[i_context + len(vocabulary)],
-            biases[i_main: i_main + 1],
-            biases[i_context + len(vocabulary): i_context + len(vocabulary) + 1],
-            gradient_squared[i_main], gradient_squared[i_context + len(vocabulary)],
-            gradient_squared_biases[i_main: i_main + 1],
-            gradient_squared_biases[i_context + len(vocabulary): i_context + len(vocabulary) + 1],
-            co_occurrence[i_main, i_context]
-        ) for i_main, i_context in itertools.permutations(range(len(co_occurrence)), 2) if co_occurrence[i_main, i_context] > 0]
+            W[i],
+            W[j + len(vocabulary)],
+            biases[i: i + 1],
+            biases[j + len(vocabulary): j + len(vocabulary) + 1],
+            gradient_squared[i], gradient_squared[j + len(vocabulary)],
+            gradient_squared_biases[i: i + 1],
+            gradient_squared_biases[j + len(vocabulary): j + len(vocabulary) + 1],
+            co_occurrence[i, j]
+        ) for i, j in itertools.permutations(range(len(co_occurrence)), 2) if co_occurrence[i, j] > 0]
 
         for i in tqdm(np.arange(self.iterations),
                       total=self.iterations, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} {elapsed}'):
