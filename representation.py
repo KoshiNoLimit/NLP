@@ -52,7 +52,7 @@ class Glove:
             cost = self.train_vectors(data)
             logging.info(f' iteration {i}    cost={cost:.4f}')
 
-        return vocabulary, W
+        return {word: (W[i]+W[i+len(vocabulary)]).tolist() for word, i in vocabulary.items()}
 
     def train_vectors(self, data):
         global_cost = 0

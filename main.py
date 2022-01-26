@@ -1,11 +1,13 @@
 from prepocessing import preprocess
-from representetion import Glove
+from representation import Glove
 import logging
 import argparse
+import json
 
 
 DATA_PATH = 'data/'
 RESULTS_PATH = 'results/'
+LOG_PATH = 'debug.log'
 
 
 if __name__ == '__main__':
@@ -18,7 +20,7 @@ if __name__ == '__main__':
     logging.basicConfig(
         format='%(asctime)s %(levelname)s: %(message)s',
         level=logging.DEBUG,
-        filename='debug.log',
+        filename=LOG_PATH,
         filemode='w',
         datefmt='%H:%M:%S'
     )
@@ -27,9 +29,7 @@ if __name__ == '__main__':
         tokens = preprocess(file)
 
     glove = Glove(vector_size=args.vs, iterations=args.i)
-    words_ids, word_vectors = glove.fit(tokens)
+    word_vectors = glove.fit(tokens)
 
-    with open(RESULTS_PATH + args.path, 'w') as file:
-        for word, index in words_ids.items():
-            vector = [str(i) for i in word_vectors[index]]
-            file.write(' '.join([word] + vector + ['\n']))
+    with open(RESULTS_PATH + args.path[:-4] + '.json', 'w') as file:
+        json.dump(word_vectors, file)
